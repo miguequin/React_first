@@ -15,7 +15,14 @@ const initialTasks = [
 ];
 
 export default function App() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState(() => {
+  const saved = localStorage.getItem("kanban-tasks");
+  return saved ? JSON.parse(saved) : initialTasks;
+});
+  useEffect(() => {
+    localStorage.setItem("kanban-tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
 
   function addTask(title, priority) {
     // RETO 2: Evitar repetidos (sin importar mayúsculas)
