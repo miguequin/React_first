@@ -6,24 +6,29 @@ import { useBoard } from "./context/BoardContext";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 
 export default function App() {
-  // Tomamos los datos y funciones del Cerebro
-  const { tasks, vaciarHechos, resetBoard } = useBoard();
+  // 1. Añadimos loading y error al destructuring
+  const { tasks, loading, error, vaciarHechos, resetBoard } = useBoard();
   const [query, setQuery] = useLocalStorage("kanban-search-query", "");
 
   useEffect(() => {
+    // Validación de seguridad: si tasks aún no carga, no intentamos filtrar
+    if (!tasks) return; 
     const pendingTasks = tasks.filter(t => t.status !== "done");
     document.title = `Kanban (${pendingTasks.length} pendientes)`;
   }, [tasks]); 
 
   const filteredTasks = useMemo(
-    () => tasks.filter((t) => t.title.toLowerCase().includes(query.toLowerCase())),
+    () => {
+      if (!tasks) return [];
+      return tasks.filter((t) => t.title.toLowerCase().includes(query.toLowerCase()));
+    },
     [tasks, query]
   );
 
   return (
     <main>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>Kanban ({tasks.length} tareas)</h1>
+        <h1>Kanban ({tasks ? tasks.length : 0} tareas)</h1>
         <button onClick={vaciarHechos} style={{ background: "#dc2626", color: "white" }}>
           Vaciar columna Hecho
         </button>
@@ -43,15 +48,25 @@ export default function App() {
         Restablecer tablero
       </button>
 
-      <div className="board">
-        {COLUMNS.map((c) => (
-          <Column
-            key={c.id}
-            title={c.title}
-            tasks={filteredTasks.filter((t) => t.status === c.id)}
-          />
-        ))}
-      </div>
+      {/* 2. Mostramos mensaje de error si la API falla */}
+      {error && <p className="error" style={{ color: "#dc2626", fontWeight: "bold", margin: "10px 0" }}>{error}</p>}
+      
+      {/* 3. Condicional: Muestra texto de carga o el tablero */}
+      {loading ? (
+        <p style={{ fontSize: "1.2rem", color: "#6b7280", textAlign: "center", marginTop: "20px" }}>
+          Cargando tareas...
+        </p>
+      ) : (
+        <div className="board">
+          {COLUMNS.map((c) => (
+            <Column
+              key={c.id}
+              title={c.title}
+              tasks={filteredTasks.filter((t) => t.status === c.id)}
+            />
+          ))}
+        </div>
+      )}
     </main>
   );
 }
