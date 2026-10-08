@@ -1,26 +1,25 @@
 import { useState } from "react";
+import { useBoard } from "../context/BoardContext";
 
-export default function TaskForm({ onAdd }) {
+export default function TaskForm() {
+  const { addTask } = useBoard(); // Se conecta directo al contexto
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("media");
-  const [error, setError] = useState(""); // RETO 1: Estado para el error
+  const [error, setError] = useState(""); 
 
   function handleSubmit(e) {
     e.preventDefault();
-    
-    // RETO 1: Validación de campo vacío
     if (title.trim() === "") {
       setError("El título no puede estar vacío");
       return;
     }
 
-    // RETO 2: Recibimos el mensaje de error si está duplicado
-    const errorMsg = onAdd(title.trim(), priority);
+    const errorMsg = addTask(title.trim(), priority);
     if (errorMsg) {
       setError(errorMsg);
     } else {
       setTitle("");
-      setError(""); // Limpiamos el error si se agregó bien
+      setError(""); 
     }
   }
 
@@ -39,8 +38,6 @@ export default function TaskForm({ onAdd }) {
         </select>
         <button>Agregar</button>
       </form>
-      
-      {/* Muestra el mensaje en rojo si hay error */}
       {error && <p style={{ color: "#dc2626", marginTop: "-10px", marginBottom: "16px", fontSize: "14px" }}>{error}</p>}
     </div>
   );

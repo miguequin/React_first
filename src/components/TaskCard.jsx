@@ -1,38 +1,33 @@
 import { useState } from "react";
+import { COLUMNS } from "../columns";
+import { useBoard } from "../context/BoardContext";
 
-const COLUMNS = [
-  { id: "todo", title: "Por hacer" },
-  { id: "doing", title: "En progreso" },
-  { id: "done", title: "Hecho" },
-  { id: "review", title: "En revisión" },
-];
-
-export default function TaskCard({ task, onMove, onRemove, onUpdateTitle }) {
-  // RETO 4: Estados para manejar la edición
+export default function TaskCard({ task }) {
+  // Traemos las funciones del Cerebro, incluyendo la de editar (RETO 4)
+  const { moveTask, removeTask, updateTaskTitle } = useBoard();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
 
   function handleSave() {
     if (editTitle.trim() !== "") {
-      onUpdateTitle(task.id, editTitle.trim());
+      updateTaskTitle(task.id, editTitle.trim());
     } else {
-      setEditTitle(task.title); // Revierte si lo dejas en blanco
+      setEditTitle(task.title); 
     }
     setIsEditing(false);
   }
 
   return (
-    // Las comillas invertidas (``) aplican el color correctamente
     <article className={`card prio-${task.priority}`}>
-      
       <div onDoubleClick={() => setIsEditing(true)}>
         {isEditing ? (
           <input 
             autoFocus
             value={editTitle} 
             onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={handleSave} // Guarda al hacer clic afuera
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()} // Guarda con Enter
+            onBlur={handleSave} 
+            onKeyDown={(e) => e.key === 'Enter' && handleSave()} 
             style={{ width: "100%", padding: "4px", boxSizing: "border-box" }}
           />
         ) : (
@@ -47,14 +42,13 @@ export default function TaskCard({ task, onMove, onRemove, onUpdateTitle }) {
       <div className="card-actions">
         <select 
           value={task.status}
-          onChange={(e) => onMove(task.id, e.target.value)}
+          onChange={(e) => moveTask(task.id, e.target.value)}
         >
           {COLUMNS.map((c) => (
             <option key={c.id} value={c.id}>{c.title}</option>
           ))}
         </select>
-        
-        <button onClick={() => onRemove(task.id)}>Eliminar</button>
+        <button onClick={() => removeTask(task.id)}>Eliminar</button>
       </div>
     </article>
   );
