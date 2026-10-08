@@ -1,5 +1,6 @@
 import { useLocalStorage } from "./hooks/useLocalStorage";
-import { useEffect } from "react";
+// 1. Añadimos useState y useMemo a las importaciones
+import { useEffect, useState, useMemo } from "react";
 import Column from "./components/Column";
 import TaskForm from "./components/TaskForm";
 
@@ -17,21 +18,32 @@ const initialTasks = [
 
 export default function App() {
   const [tasks, setTasks] = useLocalStorage("kanban-tasks", initialTasks);
+  
+  // 2. NUEVO: Estado para guardar lo que el usuario escribe en el buscador
+  const [query, setQuery] = useState("");
+
   useEffect(() => {
     localStorage.setItem("kanban-tasks", JSON.stringify(tasks));
   }, [tasks]);
 
+  // 3. NUEVO: useMemo filtra las tareas y recuerda el resultado para ahorrar memoria
+  const filteredTasks = useMemo(
+    () =>
+      tasks.filter((t) =>
+        t.title.toLowerCase().includes(query.toLowerCase())
+      ),
+    [tasks, query]
+  );
 
   function addTask(title, priority) {
-    // RETO 2: Evitar repetidos (sin importar mayúsculas)
     const existe = tasks.some(t => t.title.toLowerCase() === title.toLowerCase());
     if (existe) {
-      return "Ya existe una tarea con ese nombre."; // Retorna el error
+      return "Ya existe una tarea con ese nombre."; 
     }
 
     const newTask = { id: Date.now(), title, status: "todo", priority };
     setTasks([...tasks, newTask]);
-    return null; // Todo salió bien
+    return null; 
   }
 
   function moveTask(id, newStatus) {
@@ -42,12 +54,10 @@ export default function App() {
     setTasks(tasks.filter((t) => t.id !== id));
   }
 
-  // RETO 3: Eliminar todas las tareas terminadas
   function vaciarHechos() {
     setTasks(tasks.filter((t) => t.status !== "done"));
   }
 
-  // RETO 4: Función para guardar el nuevo título
   function updateTaskTitle(id, newTitle) {
     setTasks(tasks.map(t => t.id === id ? { ...t, title: newTitle } : t));
   }
@@ -63,12 +73,22 @@ export default function App() {
       
       <TaskForm onAdd={addTask} />
       
+      {/* 4. NUEVO: Barra de búsqueda conectada al estado 'query' */}
+      <input
+        className="search"
+        placeholder="Buscar tareas..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ margin: "15px 0", padding: "8px", width: "100%", maxWidth: "300px", display: "block" }}
+      />
+
       <div className="board">
         {COLUMNS.map((c) => (
           <Column
             key={c.id}
             title={c.title}
-            tasks={tasks.filter((t) => t.status === c.id)}
+            /* ¡Clave! Cambiamos tasks por filteredTasks para que el tablero obedezca al buscador */
+            tasks={filteredTasks.filter((t) => t.status === c.id)}
             onMove={moveTask}
             onRemove={removeTask}
             onUpdateTitle={updateTaskTitle}
