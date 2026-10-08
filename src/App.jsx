@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 import Column from "./components/Column";
 import TaskForm from "./components/TaskForm";
 
@@ -15,10 +15,7 @@ const initialTasks = [
 ];
 
 export default function App() {
-  const [tasks, setTasks] = useState(() => {
-  const saved = localStorage.getItem("kanban-tasks");
-  return saved ? JSON.parse(saved) : initialTasks;
-});
+  const [tasks, setTasks] = useLocalStorage("kanban-tasks", initialTasks);
   useEffect(() => {
     localStorage.setItem("kanban-tasks", JSON.stringify(tasks));
   }, [tasks]);
